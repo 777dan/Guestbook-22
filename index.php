@@ -34,20 +34,20 @@ if (count($out) > 0) {
         </div>
 <?php
     }
-    if ($counter_times === 5) {
-        echo "<form action=" . $_SERVER['PHP_SELF'] . " method='get'>
-        <input type='submit' value='>' name='next' />
-        <input type='hidden' value=" . $page_num . " name='page' />
-        </form>";
-    }
 } else {
     echo "Пока что нет новостей...<br>";
 }
 echo "</div>";
 
+if ($counter_times === 5) {
+    echo "<form action=" . $_SERVER['PHP_SELF'] . " method='get'>
+    <input type='submit' value='>' name='next' />
+    <input type='hidden' value=" . $page_num . " name='page' />
+    </form>";
+}
+
 if (isset($_GET['next'])) {
-    $page_num = $_GET['page'];
-    $page_num++;
+    $page_num = $_GET['page'] + 1;
 }
 
 include "footer.php";
