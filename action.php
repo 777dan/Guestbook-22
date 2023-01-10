@@ -4,10 +4,18 @@ if (!isset($_SESSION)) {
     session_start();
 }
 
-function pagination($posts)
+function pagination($posts, $count)
 {
     global $conn;
-    $sql = "SELECT * FROM gbooktable";
+    $postsID = [];
+    $i = 0;
+    $sql = "SELECT * FROM `gbooktable` ORDER BY date ASC";
+    $result = $conn->query($sql);
+    while ($row = $result->fetch_assoc()) {
+        $postsID[$i] = $row["id"];
+        $i++;
+    }
+    $sql = "SELECT * FROM gbooktable WHERE id BETWEEN " . $postsID[$count] . " AND " . $postsID[$count + 4] . " ORDER BY date DESC";
     $result = $conn->query($sql);
     while ($row = $result->fetch_assoc()) {
         $posts[$row["id"]] = $row;
@@ -21,7 +29,7 @@ function out($count)
     global $conn;
     $arr_out = [];
     try {
-        if (!$result = $conn->query("SELECT * FROM `gbooktable` ORDER BY date DESC LIMIT " . $count)) {
+        if (!$result = $conn->query("SELECT * FROM `gbooktable` ORDER BY date DESC")) {
             throw new Exception('Error selection from table  GBookTable: [' . $conn->error . ']');
         }
         while ($row = $result->fetch_assoc()) {

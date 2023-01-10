@@ -15,14 +15,12 @@ if (isset($_SESSION['user_login'])) {
 echo "</div>";
 echo "</div>";
 
-$out = out(5);
-$page_num = 1;
+$func = pagination($posts = [], 0);
 echo '<div class="container d-flex justify-content-center mt-3">';
-if (count($out) > 0) {
-    $func = pagination($posts = []);
-    echo count($func);
+if (count($func) > 0) {
+    $page_num = 1;
     $counter_times = 0;
-    foreach ($out as $row) {
+    foreach ($func as $row) {
         $counter_times++;
 
 ?>
@@ -33,18 +31,23 @@ if (count($out) > 0) {
             </div>
         </div>
 <?php
+        if ($counter_times === count($func)) {
+            break;
+        }
+        if ($counter_times === 5) {
+            echo "<form action=" . $_SERVER['PHP_SELF'] . " method='get'>
+                <input type='submit' value='>' name='next' />
+                <input type='hidden' value=" . $page_num . " name='page' />
+            </form>";
+            $counter_times = 0;
+            $func = pagination($posts = [], 5);
+        }
     }
 } else {
     echo "Пока что нет новостей...<br>";
 }
 echo "</div>";
 
-if ($counter_times === 5) {
-    echo "<form action=" . $_SERVER['PHP_SELF'] . " method='get'>
-    <input type='submit' value='>' name='next' />
-    <input type='hidden' value=" . $page_num . " name='page' />
-    </form>";
-}
 
 if (isset($_GET['next'])) {
     $page_num = $_GET['page'] + 1;
