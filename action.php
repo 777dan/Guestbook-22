@@ -15,22 +15,24 @@ function pagination($posts, $count)
         $postsID[$i] = $row["id"];
         $i++;
     }
+    print_r($postsID);
     $sql = "SELECT * FROM gbooktable WHERE id BETWEEN " . $postsID[$count] . " AND " . $postsID[$count + 4] . " ORDER BY date DESC";
     $result = $conn->query($sql);
     while ($row = $result->fetch_assoc()) {
         $posts[$row["id"]] = $row;
     }
     // $numPages = ceil(count($posts) / $count);
-    return $posts;
+    return [$posts, $count + 4];
 }
 
-function output() {
-    $func = pagination($posts = [], 0);
+function output($count) {
+    [$posts, $count] = pagination($posts = [], $count);
+    
     echo '<div class="container d-flex justify-content-center mt-3">';
-if (count($func) > 0) {
+if (count($posts) > 0) {
     $page_num = 1;
     $counter_times = 0;
-    foreach ($func as $row) {
+    foreach ($posts as $row) {
         $counter_times++;
 
 ?>
@@ -41,22 +43,22 @@ if (count($func) > 0) {
             </div>
         </div>
 <?php
-        if ($counter_times === count($func)) {
-            break;
-        }
+        // if ($counter_times === count($func)) {
+        //     break;
+        // }
         if ($counter_times === 5) {
             echo "<form action=" . $_SERVER['PHP_SELF'] . " method='get'>
                 <input type='submit' value='>' name='next' />
                 <input type='hidden' value=" . $page_num . " name='page' />
             </form>";
-            $counter_times = 0;
-            $func = pagination($posts = [], 5);
+            // $func = pagination($posts = [], 5);
         }
     }
 } else {
     echo "Пока что нет новостей...<br>";
 }
 echo "</div>";
+    return $count;
 }
 
 function check_autorize($log, $pas)

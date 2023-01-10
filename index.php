@@ -15,10 +15,11 @@ if (isset($_SESSION['user_login'])) {
 echo "</div>";
 echo "</div>";
 
-output();
-
+$output = output(0);
 if (isset($_GET['next'])) {
     $page_num = $_GET['page'] + 1;
+    output($output + 1);
+    echo $output;
 }
 
 include "footer.php";
