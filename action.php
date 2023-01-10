@@ -4,6 +4,18 @@ if (!isset($_SESSION)) {
     session_start();
 }
 
+function pagination($posts)
+{
+    global $conn;
+    $sql = "SELECT * FROM gbooktable";
+    $result = $conn->query($sql);
+    while ($row = $result->fetch_assoc()) {
+        $posts[$row["id"]] = $row;
+    }
+    // $numPages = ceil(count($posts) / $count);
+    return $posts;
+}
+
 function out($count)
 {
     global $conn;
