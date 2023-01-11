@@ -4,63 +4,6 @@ if (!isset($_SESSION)) {
     session_start();
 }
 
-function pagination($posts, $count)
-{
-    global $conn;
-    $postsID = [];
-    $i = 0;
-    $sql = "SELECT * FROM `gbooktable` ORDER BY date ASC";
-    $result = $conn->query($sql);
-    while ($row = $result->fetch_assoc()) {
-        $postsID[$i] = $row["id"];
-        $i++;
-    }
-    print_r($postsID);
-    $sql = "SELECT * FROM gbooktable WHERE id BETWEEN " . $postsID[$count] . " AND " . $postsID[$count + 4] . " ORDER BY date DESC";
-    $result = $conn->query($sql);
-    while ($row = $result->fetch_assoc()) {
-        $posts[$row["id"]] = $row;
-    }
-    // $numPages = ceil(count($posts) / $count);
-    return [$posts, $count + 4];
-}
-
-function output($count) {
-    [$posts, $count] = pagination($posts = [], $count);
-    
-    echo '<div class="container d-flex justify-content-center mt-3">';
-if (count($posts) > 0) {
-    $page_num = 1;
-    $counter_times = 0;
-    foreach ($posts as $row) {
-        $counter_times++;
-
-?>
-        <div style="margin:10px; padding:5px;width:450px;background:f0f0f0;">
-            <div style="color: #999999; border-bottom:1px solid #999999;padding:5px;">Опубликовал: <span style="color: #444;font-weight: bold;"><?php echo $row['username']; ?></span></div>
-            <div style="background:#fafafa;padding:5px;"><?php echo $row['message']; ?></div>
-            <div style="color: #999999; border-top:1px solid #999999;padding:5px;">Дата публикации: <?php echo $row['date']; ?>
-            </div>
-        </div>
-<?php
-        // if ($counter_times === count($func)) {
-        //     break;
-        // }
-        if ($counter_times === 5) {
-            echo "<form action=" . $_SERVER['PHP_SELF'] . " method='get'>
-                <input type='submit' value='>' name='next' />
-                <input type='hidden' value=" . $page_num . " name='page' />
-            </form>";
-            // $func = pagination($posts = [], 5);
-        }
-    }
-} else {
-    echo "Пока что нет новостей...<br>";
-}
-echo "</div>";
-    return $count;
-}
-
 function check_autorize($log, $pas)
 {
     global $conn;
@@ -144,4 +87,45 @@ if (isset($_REQUEST['action'])) {
         default:
             header("Location: index.php");
     }
+}
+
+function pagination($posts)
+{
+    global $conn;
+    $postsID = [];
+    $i = 0;
+    $sql = "SELECT * FROM `gbooktable` ORDER BY date DESC";
+    $result = $conn->query($sql);
+    while ($row = $result->fetch_assoc()) {
+        $posts[$i] = $row;
+        $i++;
+    }
+    return $posts;
+}
+
+function output($pagination, $page, $fragmentLen)
+{
+    echo '<div class="container d-flex justify-content-center mt-3">';
+    // $func = pagination($posts);
+    if (count($pagination) > 0) {
+        // foreach ($func as $row) {
+        for ($i = $page * $fragmentLen; $i < ($page + 1) * $fragmentLen; $i++) {
+            if (isset($pagination[$i])) {
+?>
+                <div style="margin:10px; padding:5px;width:450px;background:f0f0f0;">
+                    <div style="color: #999999; border-bottom:1px solid #999999;padding:5px;">Опубликовал: <span style="color: #444;font-weight: bold;"><?php echo $pagination[$i]['username']; ?></span></div>
+                    <div style="background:#fafafa;padding:5px;"><?php echo $pagination[$i]['message']; ?></div>
+                    <div style="color: #999999; border-top:1px solid #999999;padding:5px;">Дата публикации: <?php echo $pagination[$i]['date']; ?>
+                    </div>
+                </div>
+<?php
+            } else {
+                break;
+            }
+        }
+    } else {
+        echo "Пока что нет новостей...<br>";
+    }
+    echo "</div>";
+    return $pagination;
 }
