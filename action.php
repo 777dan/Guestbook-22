@@ -7,17 +7,22 @@ if (!isset($_SESSION)) {
 function check_autorize($log, $pas)
 {
     global $conn;
-    $sql = "SELECT log FROM Users WHERE log = '" . $log . "' AND pas='" . $pas . "';";
-
-    if ($result = $conn->query($sql)) {
-        $n = $result->num_rows;
-        if ($n != 0) {
+    $users = [];
+    $i = 0;
+    $sql = "SELECT * FROM Users";
+    $result = $conn->query($sql);
+    while ($row = $result->fetch_assoc()) {
+        $users[$i] = $row;
+        $i++;
+    }
+    $boolValue = false;
+    for ($i = 0; $i < count($users); $i++) {
+        if (password_verify($pas, $users[$i]['pas']) && $log == $users[$i]['log']) {
             $_SESSION['user_login'] = $log;
             return true;
-        } else {
-            return false;
-        }
+        } 
     }
+    if (!$boolValue) return false;
 }
 
 function check_log($log)
@@ -55,10 +60,12 @@ function add()
 
     $username = $_REQUEST['username'];
     $message = $_REQUEST['message'];
+    $category = $_REQUEST['categories'];
+    $name = $_REQUEST['name'];
 
     try {
-        if (!$conn->query("INSERT INTO GBookTable(username, date, message) VALUES ('$username', NOW(), '$message')")) {
-            throw new Exception('Помилка заповнення  таблиці GBookTable: [' . $conn->error . ']');
+        if (!$conn->query("INSERT INTO News(username, date, message, category, name) VALUES ('$username', NOW(), '$message', '$category', '$name')")) {
+            throw new Exception('Ошибка заполнения таблицы News: [' . $conn->error . ']');
         }
 
         $_SESSION['add'] = true;
@@ -92,9 +99,8 @@ if (isset($_REQUEST['action'])) {
 function pagination($posts)
 {
     global $conn;
-    $postsID = [];
     $i = 0;
-    $sql = "SELECT * FROM `gbooktable` ORDER BY date DESC";
+    $sql = "SELECT * FROM `News` ORDER BY date DESC";
     $result = $conn->query($sql);
     while ($row = $result->fetch_assoc()) {
         $posts[$i] = $row;
@@ -106,16 +112,21 @@ function pagination($posts)
 function output($pagination, $page, $fragmentLen)
 {
     echo '<div class="container d-flex justify-content-center mt-3">';
+    echo "<div class='row'>";
     // $func = pagination($posts);
     if (count($pagination) > 0) {
         // foreach ($func as $row) {
+        $counter = 0;
         for ($i = $page * $fragmentLen; $i < ($page + 1) * $fragmentLen; $i++) {
             if (isset($pagination[$i])) {
+                $counter++;
 ?>
-                <div style="margin:10px; padding:5px;width:450px;background:f0f0f0;">
-                    <div style="color: #999999; border-bottom:1px solid #999999;padding:5px;">Опубликовал: <span style="color: #444;font-weight: bold;"><?php echo $pagination[$i]['username']; ?></span></div>
-                    <div style="background:#fafafa;padding:5px;"><?php echo $pagination[$i]['message']; ?></div>
-                    <div style="color: #999999; border-top:1px solid #999999;padding:5px;">Дата публикации: <?php echo $pagination[$i]['date']; ?>
+                <div class="col news-block">
+                    <div class="bottom_border_line"><span class="news_text">Опубликовал:</span> <span class="writer"><?php echo $pagination[$i]['username']; ?></span></div>
+                    <div class="bottom_border_line"><span class="news_text">Категория:</span> <a class="category_link" href="category.php?category=<?= $pagination[$i]['category'] ?>&page=0"><?php echo $pagination[$i]['category']; ?></a></div>
+                    <div class="bottom_border_line"><span class="main_text"><?php echo $pagination[$i]['name']; ?></span></div>
+                    <div class="news_field"><span class="main_text"><?php echo $pagination[$i]['message']; ?></span></div>
+                    <div class="top_border_line"><span class="news_text">Дата публикации:</span> <span class="date"><?php echo $pagination[$i]['date']; ?></span>
                     </div>
                 </div>
 <?php
@@ -127,5 +138,40 @@ function output($pagination, $page, $fragmentLen)
         echo "Пока что нет новостей...<br>";
     }
     echo "</div>";
+    echo "</div><br>";
     return $pagination;
+}
+
+function getCategories()
+{
+    global $conn;
+    $categories = [];
+    $i = 0;
+    $sql = "SELECT category FROM `category`";
+    $result = $conn->query($sql);
+    while ($row = $result->fetch_assoc()) {
+        $categories[$i] = $row;
+        $i++;
+    }
+    return $categories;
+}
+
+function findSameCategories($sameCategories, $name)
+{
+    global $conn;
+    $i = 0;
+    $sql = "SELECT * FROM `News` WHERE category = '" . $name . "'";
+    $result = $conn->query($sql);
+    while ($row = $result->fetch_assoc()) {
+        $sameCategories[$i] = $row;
+        $i++;
+    }
+    return $sameCategories;
+}
+
+function backToMainPage()
+{
+    echo "<div class='container-fluid d-flex justify-content-center mt-3'>
+<a class='btn btn-info' href='index.php'>Вернуться на главную страницу</a>
+</div>";
 }
